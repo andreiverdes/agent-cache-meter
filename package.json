@@ -1,0 +1,40 @@
+{
+  "name": "omp-cache-meter",
+  "version": "0.1.0",
+  "description": "Prompt-cache meter for omp: read/write/uncached split, a countdown to expiry, and whether /compact pays for itself on a cold cache.",
+  "keywords": [
+    "omp",
+    "oh-my-pi",
+    "omp-plugin",
+    "omp-extension",
+    "prompt-cache",
+    "anthropic",
+    "tern"
+  ],
+  "license": "MIT",
+  "author": "Andrei Verdes (https://github.com/andreiverdes)",
+  "homepage": "https://github.com/andreiverdes/omp-cache-meter#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andreiverdes/omp-cache-meter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/andreiverdes/omp-cache-meter/issues"
+  },
+  "type": "module",
+  "files": [
+    "omp-extension/*.ts"
+  ],
+  "omp": {
+    "extensions": [
+      "./omp-extension/index.ts"
+    ]
+  },
+  "scripts": {
+    "check": "tsc --noEmit -p ."
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "^7.0.2"
+  }
+}
