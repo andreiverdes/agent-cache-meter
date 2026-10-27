@@ -197,6 +197,8 @@ export interface Snapshot {
 		  }
 		| undefined;
 	cachingOff: boolean;
+	/** False for a model without prices: the meter then shows tokens instead of dollars. */
+	priced: boolean;
 }
 
 /** omp's refresh delay for an entry lifetime (cache-warmer.ts): 90 % of it, at least 10 s before expiry. */
@@ -285,10 +287,13 @@ export function snapshot(t: Tracker, env: Env): Snapshot | undefined {
 		const perTurn = (total - afterTokens) * price.read;
 		const paybackTurns = extra <= 0 ? 0 : perTurn > 0 ? Math.ceil(extra / perTurn) : Number.POSITIVE_INFINITY;
 		const limit = env.settings.advice.paybackTurns;
-		const recommended = env.host.coldAdvice === "always" || (limit > 0 && paybackTurns <= limit);
+		// "Always" still needs a smaller context: a short conversation comes back about as long after re-attached files.
+		const recommended = env.host.coldAdvice === "always" ? Number.isFinite(paybackTurns) : limit > 0 && paybackTurns <= limit;
 		plan = { afterTokens, summaryCost, afterCost, extra, paybackTurns, laterRebuildSaving: rewriteCost - afterCost, recommended };
 	}
-	const coldAdvice = plan?.recommended || (stage === "cold" && env.host.coldAdvice === "always") ? "compact" : "continue";
+	// Without prices "always" still needs a smaller context, judged by size alone.
+	const shrinks = head + env.host.summaryTokens + env.host.keepRecentTokens + env.host.extraAfterTokens < total;
+	const coldAdvice = plan ? (plan.recommended ? "compact" : "continue") : stage === "cold" && env.host.coldAdvice === "always" && shrinks ? "compact" : "continue";
 	const advice = stage === "cold" ? coldAdvice : stage === "expiring" ? "send now" : "continue";
 	return {
 		last: { ...last, total, hitPct: total > 0 ? (100 * last.read) / total : 0 },
@@ -308,6 +313,7 @@ export function snapshot(t: Tracker, env: Env): Snapshot | undefined {
 		advice,
 		compacted,
 		cachingOff: env.retention === "none",
+		priced: price.write > 0,
 	};
 }
 
@@ -349,16 +355,18 @@ function splitBar(r: Pick<Req, "read" | "write" | "uncached">): { bar: [number, 
 	return { bar: [[r.read / total, "success"], [r.write / total, "accent"], [r.uncached / total, "warning"]] };
 }
 
+const turns = (n: number): string => `~${n} turn${n === 1 ? "" : "s"}`;
+
 /** `/compact recommended · ≈ $0.82 · save ~$0.15`, or why continuing is the better call. */
 function compactAdvice(p: CompactPlan): Span[] {
 	if (!p.recommended) {
-		const why = Number.isFinite(p.paybackTurns) ? `pays back only after ~${p.paybackTurns} turns` : "would not pay back";
+		const why = Number.isFinite(p.paybackTurns) ? `pays back only after ${turns(p.paybackTurns)}` : "wouldn't make it smaller";
 		return [{ text: "continue", tone: "accent" }, { text: " recommended", tone: "success" }, ...muted(` · /compact ${why}`)];
 	}
 	const cheaper = p.extra <= 0;
 	const net: Span[] = cheaper
 		? [{ text: `save ~${usd(-p.extra)}`, tone: "success" }]
-		: [{ text: `+${usd(p.extra)} now`, tone: "warning" }, ...muted(`, pays back in ~${p.paybackTurns} turns`)];
+		: [{ text: `+${usd(p.extra)} now`, tone: "warning" }, ...muted(`, pays back in ${turns(p.paybackTurns)}`)];
 	return [
 		{ text: "/compact", tone: "accent" },
 		{ text: " recommended", tone: "success" },
@@ -380,7 +388,9 @@ export function renderMeter(s: Snapshot, env: Pick<Env, "settings" | "host">): V
 	if (s.cachingOff) return { tone: "muted", blocks: [{ kind: "bar", left: [muted("⛁ caching off")], right: [muted(env.host.cachingOffHint)] }] };
 	const title: Item[] = [[{ text: "⛁ cache", tone: "strong" }], { badge: STAGE_BADGE[s.stage], tone }];
 	const note = env.host.priceNote ? muted(` · ${env.host.priceNote}`) : [];
-	const rebuild: Span[] = [...muted(`rebuild cost ${tokens(s.prefixTokens)} ≈ `), { text: usd(s.rewriteCost), tone: s.stage === "cold" ? "error" : "warning" }];
+	const rebuild: Span[] = s.priced
+		? [...muted(`rebuild cost ${tokens(s.prefixTokens)} ≈ `), { text: usd(s.rewriteCost), tone: s.stage === "cold" ? "error" : "warning" }]
+		: muted(`rebuilds ${tokens(s.prefixTokens)}`);
 
 	if (s.compacted) {
 		const { tokensBefore, tokensAfter, perTurn, result } = s.compacted;
@@ -395,19 +405,23 @@ export function renderMeter(s: Snapshot, env: Pick<Env, "settings" | "host">): V
 		if (result && result.net >= 0) gain.push(...muted(" · paid for itself "), { text: `(~${usd(result.net)})`, tone: "success" });
 		else if (result) gain.push(...muted(" · "), { text: `+${usd(-result.net)} now`, tone: "warning" });
 		// The least important part last, so a narrow meter cuts it first.
-		gain.push(...muted(` · next ≈ ${usd(s.rewriteCost)}`), ...note);
-		return { tone, blocks: [{ kind: "bar", left: [...title, gain], right: [[{ text: tokens(tokensBefore) }, ...muted(" → "), { text: tokens(tokensAfter), tone: "accent" }]] }] };
+		if (s.priced) gain.push(...muted(` · next ≈ ${usd(s.rewriteCost)}`));
+		gain.push(...note);
+		// The sizes stay at the right end; the left text is cut first.
+		return { tone, blocks: [{ kind: "bar", left: [...title, gain], right: [[{ text: tokens(tokensBefore) }, ...muted(" → "), { text: tokens(tokensAfter), tone: "accent" }]], keepRight: true }] };
 	}
 
 	if (s.stage === "cold") {
 		const ago = `${s.tier === "long" ? "1h" : "5m"} · expired | ${elapsed(-s.leftMs / 1000)} ago`;
 		const recommendCompact: Span[] = [{ text: "/compact", tone: "accent" }, { text: " recommended", tone: "success" }, ...muted(" · smaller prefix, cheaper turns")];
 		const advice = s.plan ? compactAdvice(s.plan) : s.coldAdvice === "compact" ? recommendCompact : muted(`continue, /compact or ${env.host.freshCommand}`);
+		const hint = [env.host.priceNote, env.host.detailsHint].filter(Boolean).join(" · ");
 		return {
 			tone,
 			blocks: [
-				{ kind: "bar", left: [...title, [...rebuild, ...note]], right: [muted(ago)] },
-				{ kind: "bar", left: [advice], right: [muted(env.host.detailsHint)] },
+				// The expiry stays at the right end; the rebuild text is cut first in a narrow terminal.
+				{ kind: "bar", left: [...title, rebuild], right: [muted(ago)], keepRight: true },
+				{ kind: "bar", left: [advice], right: hint ? [muted(hint)] : [] },
 			],
 		};
 	}
@@ -443,6 +457,8 @@ export function renderPanel(t: Tracker, s: Snapshot | undefined, env: Pick<Env, 
 	const about = [model ? `${model.provider} · ${model.id}` : undefined, s?.tierLabel, refresh, host.priceNote].filter(Boolean).join(" · ");
 	const header: Block = { kind: "bar", left: [[{ text: "⛁ Cache · this session", tone: "strong" }]], right: [muted(about)] };
 	if (!s) return { tone: "accent", blocks: [header, { kind: "gap" }, { kind: "bar", left: [muted("No requests yet.")], right: [] }] };
+	// An unpriced model's amounts would all read $0.00.
+	const money = (n: number): string => (s.priced ? usd(n) : "–");
 	const details: Block[] = [];
 	const c = s.compacted;
 	if (c?.tokensAfter !== undefined && c.perTurn !== undefined) {
@@ -465,14 +481,12 @@ export function renderPanel(t: Tracker, s: Snapshot | undefined, env: Pick<Env, 
 		const rows: Cell[][] = [[muted(s.stage === "cold" ? "why it went cold" : "why it may expire"), [], muted(s.warming.reason)]];
 		if (s.stage === "cold") {
 			const head = s.headTokens > 0 ? ` (${tokens(s.headTokens)} of it still cached)` : "";
-			rows.push([[{ text: "continue", tone: "accent" }], [{ text: `≈ ${usd(s.rewriteCost)}` }], muted(`rebuilds ${tokens(s.prefixTokens)}${head}`)]);
+			rows.push([[{ text: "continue", tone: "accent" }], [{ text: s.priced ? `≈ ${usd(s.rewriteCost)}` : "" }], muted(`rebuilds ${tokens(s.prefixTokens)}${head}`)]);
 			const p = s.plan;
 			if (p) {
-				const payback = p.extra <= 0 ? "cheaper now" : Number.isFinite(p.paybackTurns) ? `pays back in ~${p.paybackTurns} turns` : "never pays back";
-				rows.push(
-					[[{ text: "/compact", tone: "accent" }], [{ text: `≈ ${usd(p.summaryCost + p.afterCost)}` }], muted(`summary ${usd(p.summaryCost)} + rewrite ${tokens(p.afterTokens)} ${usd(p.afterCost)} · ${payback}`)],
-					[[], [], muted(`then every later rebuild ~${usd(p.laterRebuildSaving)} cheaper`)],
-				);
+				const payback = p.extra <= 0 ? "cheaper now" : Number.isFinite(p.paybackTurns) ? `pays back in ${turns(p.paybackTurns)}` : "never makes it smaller";
+				rows.push([[{ text: "/compact", tone: "accent" }], [{ text: `≈ ${usd(p.summaryCost + p.afterCost)}` }], muted(`summary ${usd(p.summaryCost)} + rewrite ${tokens(p.afterTokens)} ${usd(p.afterCost)} · ${payback}`)]);
+				if (p.laterRebuildSaving > 0) rows.push([[], [], muted(`then every later rebuild ~${usd(p.laterRebuildSaving)} cheaper`)]);
 			}
 			rows.push([[{ text: host.freshCommand, tone: "accent" }], [], muted("fresh session; nothing to rebuild")]);
 		}
@@ -491,9 +505,9 @@ export function renderPanel(t: Tracker, s: Snapshot | undefined, env: Pick<Env, 
 		rows: [
 			[
 				[{ text: `${all > 0 ? ((100 * read) / all).toFixed(1) : "0.0"}%`, tone: "success" }],
-				[{ text: usd(k.saved) }],
-				...(host.warmer ? [[{ text: usd(k.warmCost) }, ...muted(` · ${k.warms} ${k.warms === 1 ? "refresh" : "refreshes"}`)]] : []),
-				[{ text: String(k.misses), tone: k.misses > 0 ? "warning" : undefined }, ...muted(` · ${usd(k.missCost)} rewrites`)],
+				[{ text: money(k.saved) }],
+				...(host.warmer ? [[{ text: money(k.warmCost) }, ...muted(` · ${k.warms} ${k.warms === 1 ? "refresh" : "refreshes"}`)]] : []),
+				[{ text: String(k.misses), tone: k.misses > 0 ? "warning" : undefined }, ...muted(` · ${money(k.missCost)} rewrites`)],
 			],
 		],
 	};
@@ -510,7 +524,7 @@ export function renderPanel(t: Tracker, s: Snapshot | undefined, env: Pick<Env, 
 			[{ text: tokens(r.write) }],
 			[{ text: tokens(r.uncached) }],
 			[{ text: `${((100 * r.read) / total).toFixed(1)}%`, tone: r.read / total >= 0.9 ? undefined : "warning" }],
-			[{ text: usd(r.cost) }],
+			[{ text: money(r.cost) }],
 			r.afterCompact ? [{ text: "after /compact", tone: "accent" }] : miss ? [{ text: "miss", tone: "error" }] : [],
 		];
 	});

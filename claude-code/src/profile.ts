@@ -29,7 +29,8 @@ export function claudeHost(priceNote: string | undefined): HostProfile {
 		summaryTokens: SUMMARY_TOKENS,
 		// The context after a compaction beyond the system prompt and tools: 31.4k, 52.0k and 56.9k in the sessions above.
 		extraAfterTokens: 30_000,
-		detailsHint: "claude-cache-meter panel",
+		// The status line has no room to spare; `claude-cache-meter panel` is in the README and the panel's footer.
+		detailsHint: "",
 		freshCommand: "/clear",
 		cachingOffHint: "no prompt caching reported",
 		priceNote,

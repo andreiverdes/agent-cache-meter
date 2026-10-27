@@ -12,7 +12,7 @@ import { pricing } from "./prices";
 import { claudeHost } from "./profile";
 import { CLAUDE_DIR, dig, loadSession, modelFor, parseInput, type StatusInput } from "./session";
 
-const VERSION = "0.1.2";
+const VERSION = "0.1.3";
 const NAME = "claude-cache-meter";
 const SETTINGS_FILE = path.join(CLAUDE_DIR, "cache-meter.json");
 const CLAUDE_SETTINGS = path.join(CLAUDE_DIR, "settings.json");

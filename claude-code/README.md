@@ -36,7 +36,7 @@ One line while the cache is warm, expiring or just compacted, two when it's cold
 |---|---|---|
 | Warm | `read · write · uncached` of the last request | `hit rate`, split bar, `99.6% \| 59:12` |
 | Expires soon | `rebuild cost 96.6k ≈ $0.39 after` | the same, the countdown in amber |
-| Cold | `rebuild cost 365.5k ≈ $2.81`; line 2: `/compact recommended · ≈ $1.74 · save ~$1.07` | `1h · expired \| 4:00 ago`; `claude-cache-meter panel` |
+| Cold | `rebuild cost 365.5k ≈ $2.81`; line 2: `/compact recommended · ≈ $1.74 · save ~$1.07`, or `continue recommended · /compact wouldn't make it smaller` for a short conversation | `1h · expired \| 4:00 ago`; `list price` on a subscription |
 | Reset by `/compact` | `~$0.09 less per turn · paid for itself (~$0.74) · next ≈ $0.21` | `518.2k → 62.5k` |
 
 On a Claude subscription the dollar amounts end in `· list price`: they compare options at API prices, they aren't a bill.

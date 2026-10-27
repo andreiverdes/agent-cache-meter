@@ -1,6 +1,6 @@
 {
   "name": "omp-cache-meter",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Prompt-cache meter for omp: read/write/uncached split, a countdown to expiry, and whether /compact pays for itself on a cold cache.",
   "keywords": [
     "omp",
