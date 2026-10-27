@@ -269,7 +269,7 @@
   {
    "rev": "4",
    "date": "2026-10-27",
-   "built": "2026-10-27T17:33:08+00:00",
+   "built": "2026-10-27T19:34:09+00:00",
    "head": {
     "id": "claude-code-cache-meter",
     "title": "Cache meter for Claude Code",
@@ -318,7 +318,7 @@
      "title": "Steps",
      "lead": "7 steps. The shared meter changes first (wording, host profile), so omp is proven unchanged before any Claude Code code depends on it.",
      "blocks": [
-      "41b3ddb5bbf410d3"
+      "396b755376924e6d"
      ]
     },
     {
@@ -1720,7 +1720,7 @@
     }
    ]
   },
-  "41b3ddb5bbf410d3": {
+  "396b755376924e6d": {
    "type": "steps",
    "id": "plan",
    "title": "Implementation order",
@@ -1913,7 +1913,19 @@
       "README.md"
      ],
      "md": "- **Docs:** a README for the package, and a Claude Code section in the root README with a screenshot.\n- **Release:** `npm publish --access public` from `claude-code/`. Both `claude-cache-meter` and `cc-cache-meter` are free on npm (404 on `npm view` today). Publishing needs your npm login.",
-     "status": "blocked"
+     "status": "done",
+     "evidence": [
+      {
+       "label": "Published and installed from npm",
+       "md": "omp-cache-meter 0.1.0: `omp install omp-cache-meter` in a clean config, doctor 4 ok. claude-cache-meter 0.1.2: `npx -y claude-cache-meter@0.1.2 install` in a clean config sets `node \"<global root>/claude-cache-meter/dist/claude-cache-meter.js\"`.",
+       "pin": {
+        "repo": "../..",
+        "commit": "f1c8362255842e3881a9f5102eaee1eb10ece7ae",
+        "dirty": false,
+        "at": "2026-10-27T19:34:09Z"
+       }
+      }
+     ]
     }
    ]
   }
