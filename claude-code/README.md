@@ -39,11 +39,11 @@ One line while the cache is warm, expiring or just compacted, two when it's cold
 | Cold | `rebuild cost 365.5k ≈ $2.81`; line 2: `/compact recommended · ≈ $1.74 · save ~$1.07`, or `continue recommended · /compact wouldn't make it smaller` for a short conversation | `1h · expired \| 4:00 ago`; `list price` on a subscription |
 | Reset by `/compact` | `~$0.09 less per turn · paid for itself (~$0.74) · next ≈ $0.21` | `518.2k → 62.5k` |
 
-On a Claude subscription the dollar amounts end in `· list price`: they compare options at API prices, they aren't a bill.
+On a Claude subscription the meter adds `list price`: its dollar amounts compare options at API prices, they aren't a bill.
 
 ### Why `/compact` on a cold cache
 
-When the cache has expired, your next message writes the whole conversation to the cache again, at 1.25× the input price (5-minute cache) or 2× (1-hour cache). `/compact` sends the conversation to the summary request as plain input (1×) instead, and the next request writes only the much smaller summary. So on a cold cache the meter always recommends `/compact`, and shows what it costs next to what continuing costs.
+When the cache has expired, your next message writes the whole conversation to the cache again, at 1.25× the input price (5-minute cache) or 2× (1-hour cache). `/compact` sends the conversation to the summary request as plain input (1×) instead, and the next request writes the smaller context: the system prompt and tools, the summary, and about 20k tokens of files Claude Code attaches again. So on a cold cache the meter recommends `/compact` whenever that context comes out smaller, and shows what it costs next to what continuing costs. A conversation under roughly 50k tokens comes back about as long, so there it says `continue recommended · /compact wouldn't make it smaller`.
 
 After `/compact` the meter keeps two amounts apart. **Per turn** is what every later request saves by reading the smaller context from the cache. **Now** is the compaction's one-off result, shown when the cache had already expired: the rebuild it avoided minus the summary request and the first write of the new context.
 
