@@ -1,28 +1,32 @@
 # omp-cache-meter
 
-A prompt-cache meter for [omp](https://github.com/can1357/oh-my-pi). It shows how many tokens each request read from the cache, wrote to it and sent uncached, and counts down to the cache's expiry. When the cache goes cold it says what rebuilding it costs and whether `/compact` pays for itself. It also includes a plugin for Tern, Stencil's terminal, that shows every agent's cache in one place.
+A prompt-cache meter for [omp](https://github.com/can1357/oh-my-pi) and [Claude Code](https://code.claude.com). It shows how many tokens each request read from the cache, wrote to it and sent uncached, and counts down to the cache's expiry. When the cache goes cold it says what rebuilding it costs and whether `/compact` pays for itself. It also includes a plugin for Tern, Stencil's terminal, that shows every agent's cache in one place.
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/andreiverdes/omp-cache-meter/main/docs/screenshots/omp-meter-warm-light.png">
   <img alt="The meter above omp's composer on one line: 'cache' with a green 'warm' badge, read 96.2k · write 380 · uncached 14, then at the right end 'hit rate', the split bar, 99.6% | 4:33" src="https://raw.githubusercontent.com/andreiverdes/omp-cache-meter/main/docs/screenshots/omp-meter-warm.png">
 </picture>
 
-The repo has two parts:
+The repo has three parts:
 
 | Part | Runs in | Does |
 |---|---|---|
 | [`omp-extension/`](omp-extension) | omp | Draws the meter above the composer and adds the `/cache` panel and `/cache settings`. In a Tern pane it also writes one state file per pane. |
+| [`claude-code/`](claude-code) | Claude Code | The same meter as Claude Code's status line (npm: `claude-cache-meter`), built from the extension's meter code, plus a `panel` command. In a Tern pane it writes the same state file. |
 | [`tern-plugin/`](tern-plugin) | Tern | Reads those state files. It adds a status-line segment, a countdown on tab titles, a toast shortly before an agent's cache expires, and a canvas listing every agent. |
 
-The omp extension works on its own in any terminal. The Tern plugin needs the extension.
+The omp extension and the Claude Code status line each work on their own in any terminal. The Tern plugin needs one of them.
 
 ## Install
 
-Tested on omp 18.12.6 and Tern 0.8.2.
+Tested on omp 18.12.6, Claude Code 2.1.311 and Tern 0.8.2.
 
 ```sh
 # omp
 omp install omp-cache-meter
+
+# Claude Code
+npx claude-cache-meter install
 
 # Tern (optional)
 tern plugin install github.com/andreiverdes/omp-cache-meter/tern-plugin
@@ -31,6 +35,8 @@ tern plugin install github.com/andreiverdes/omp-cache-meter/tern-plugin
 omp sessions that are already running pick up the extension only after a restart. To update, run `omp plugin upgrade omp-cache-meter` and `tern plugin install github.com/andreiverdes/omp-cache-meter/tern-plugin --force`; to remove, `omp plugin uninstall omp-cache-meter` and `tern plugin remove cache-meter`.
 
 `omp install github:andreiverdes/omp-cache-meter` installs the extension straight from this repository instead of npm.
+
+In Claude Code you can install it as a plugin instead: `/plugin install cache-meter --marketplace andreiverdes/omp-cache-meter`, then `/cache-meter:setup`. [`claude-code/`](claude-code#readme) covers the status line's states, its `panel` command and its settings.
 
 ## The meter
 
@@ -136,14 +142,18 @@ All colours come from the active omp or Tern theme, so light and dark themes bot
 git clone https://github.com/andreiverdes/omp-cache-meter.git
 cd omp-cache-meter
 bun install       # type definitions only; omp supplies its own API at runtime
-bun run check     # tsc --noEmit
+bun run check     # tsc --noEmit, both the extension and claude-code/
 
 # load the working copy instead of an installed package
 omp plugin link .
 tern plugin link tern-plugin
+
+# Claude Code: build the status line and try it without touching your settings
+(cd claude-code && bun run build)
+claude --settings '{"statusLine":{"type":"command","command":"node '"$PWD"'/claude-code/dist/claude-cache-meter.js","refreshInterval":1}}'
 ```
 
-The screenshots were rendered offscreen with `tern shot`: the extension's own renderers in omp 18.12.6 and Tern 0.8.2, fed a fixed session, and the settings list from the extension itself.
+The omp screenshots were rendered offscreen with `tern shot`: the extension's own renderers in omp 18.12.6 and Tern 0.8.2, fed a fixed session, and the settings list from the extension itself. The Claude Code screenshot is the built status line in a live Claude Code 2.1.311 session in Tern.
 
 ## License
 

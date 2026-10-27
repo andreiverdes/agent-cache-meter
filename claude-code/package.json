@@ -1,0 +1,39 @@
+{
+  "name": "claude-cache-meter",
+  "version": "0.1.0",
+  "description": "Prompt-cache meter as Claude Code's status line: read/write/uncached split, a countdown to expiry, and what /compact saves on a cold cache.",
+  "keywords": [
+    "claude-code",
+    "claude",
+    "statusline",
+    "status-line",
+    "prompt-cache",
+    "anthropic",
+    "tern"
+  ],
+  "license": "MIT",
+  "author": "Andrei Verdes (https://github.com/andreiverdes)",
+  "homepage": "https://github.com/andreiverdes/omp-cache-meter/tree/main/claude-code#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andreiverdes/omp-cache-meter.git",
+    "directory": "claude-code"
+  },
+  "bugs": {
+    "url": "https://github.com/andreiverdes/omp-cache-meter/issues"
+  },
+  "type": "module",
+  "bin": {
+    "claude-cache-meter": "dist/claude-cache-meter.js"
+  },
+  "files": [
+    "dist/claude-cache-meter.js"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "bun build src/cli.ts --target node --minify-syntax --outfile dist/claude-cache-meter.js",
+    "prepack": "cp ../LICENSE LICENSE && bun run build"
+  }
+}

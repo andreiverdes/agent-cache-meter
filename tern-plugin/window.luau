@@ -1,6 +1,6 @@
--- cache-meter: shows each omp agent's prompt-cache state in Tern's chrome, a toast before expiry and two
--- canvases (all agents, settings). The omp extension of the same name writes one JSON file per pane into
--- <plugin data>/panes/<TERN_PANE>.json; this half only reads them.
+-- cache-meter: shows each agent's prompt-cache state (omp or Claude Code) in Tern's chrome, a toast before expiry and
+-- two canvases (all agents, settings). The omp extension and the claude-cache-meter status line write one JSON file
+-- per pane into <plugin data>/panes/<TERN_PANE>.json (`host` says which); this half only reads them.
 
 local ui = tern.ui
 local DIR = tern.plugin.data .. "/panes"
@@ -186,7 +186,7 @@ local function main_view()
 			miss_cost += s.totals.missCost
 			local total = math.max(1, s.last.total)
 			table.insert(rows, {
-				{ ui.span(s.label, "strong"), ui.span(" " .. (s.model or ""), "muted") },
+				{ ui.span(s.label, "strong"), ui.span(" " .. (if s.host == "claude" then "Claude Code · " else "") .. (s.model or ""), "muted") },
 				ui.meter_parts_cell({ { s.last.read / total, "success" }, { s.last.write / total, "accent" }, { s.last.uncached / total, "warning" } }),
 				string.format("%.1f%%", s.last.hitPct),
 				tokens(s.prefixTokens),
@@ -207,8 +207,8 @@ local function main_view()
 	end
 	if count == 0 then
 		return ui.col({
-			ui.text(ui.span("No omp agent has published cache state yet.", "muted")),
-			ui.text(ui.span("Install the omp cache-meter extension and send one prompt.", "muted")),
+			ui.text(ui.span("No agent has published cache state yet.", "muted")),
+			ui.text(ui.span("Install the omp cache-meter extension or claude-cache-meter, then send one prompt.", "muted")),
 		})
 	end
 	local parts = {
@@ -291,7 +291,7 @@ local function settings_view()
 			enum_row("Opens", "canvas.open"),
 			number_row("Refresh every", "canvas.refreshSeconds", "s"),
 		}),
-		ui.text(ui.span("When to recommend /compact (its payback in turns) belongs to the omp extension: run /cache settings in an agent.", "muted")),
+		ui.text(ui.span("When to recommend /compact belongs to the agent: /cache settings in omp; Claude Code agents always get it on a cold cache.", "muted")),
 		ui.text(ui.span("Tern's status bar must be on for the segment to show (Settings → Appearance).", "muted")),
 	})
 end
@@ -300,7 +300,7 @@ local function settings_dock()
 	return ui.row({ ui.text(ui.span("Saved in cache-meter/kv.json · every window", "muted")), button("Reset to defaults", "reset") })
 end
 
-local ABOUT_MAIN = "Cache state of every omp agent, read from the omp cache-meter extension. "
+local ABOUT_MAIN = "Cache state of every omp and Claude Code agent, read from the cache-meter extension and status line. "
 	.. "Focus switches to that agent's pane. Compact sends that agent /compact. Settings opens this plugin's settings."
 local ABOUT_SETTINGS = "Settings of the cache meter plugin. Each button changes one setting and saves it for every window."
 

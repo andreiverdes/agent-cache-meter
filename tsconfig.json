@@ -9,5 +9,5 @@
     "types": ["node"],
     "allowImportingTsExtensions": false
   },
-  "include": ["omp-extension/*.ts"]
+  "include": ["omp-extension/*.ts", "claude-code/src/*.ts"]
 }

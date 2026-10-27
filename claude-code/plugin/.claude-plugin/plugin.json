@@ -1,0 +1,12 @@
+{
+  "name": "cache-meter",
+  "version": "0.1.0",
+  "description": "Sets up claude-cache-meter as your status line: cache countdown, read/write split, and what /compact saves on a cold cache.",
+  "author": {
+    "name": "Andrei Verdes",
+    "url": "https://github.com/andreiverdes"
+  },
+  "homepage": "https://github.com/andreiverdes/omp-cache-meter/tree/main/claude-code#readme",
+  "repository": "https://github.com/andreiverdes/omp-cache-meter",
+  "license": "MIT"
+}

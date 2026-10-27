@@ -1,0 +1,15 @@
+{
+  "name": "omp-cache-meter",
+  "description": "Prompt-cache meter for Claude Code's status line",
+  "owner": {
+    "name": "Andrei Verdes",
+    "url": "https://github.com/andreiverdes"
+  },
+  "plugins": [
+    {
+      "name": "cache-meter",
+      "source": "./claude-code/plugin",
+      "description": "Sets up claude-cache-meter as your status line: cache countdown, read/write split, and what /compact saves on a cold cache."
+    }
+  ]
+}
