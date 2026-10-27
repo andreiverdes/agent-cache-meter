@@ -12,7 +12,7 @@ import { pricing } from "./prices";
 import { claudeHost } from "./profile";
 import { CLAUDE_DIR, dig, loadSession, modelFor, parseInput, type StatusInput } from "./session";
 
-const VERSION = "0.1.0";
+const VERSION = "0.1.1";
 const NAME = "claude-cache-meter";
 const SETTINGS_FILE = path.join(CLAUDE_DIR, "cache-meter.json");
 const CLAUDE_SETTINGS = path.join(CLAUDE_DIR, "settings.json");
@@ -121,10 +121,18 @@ function install(): void {
 		process.exitCode = 1;
 		return;
 	}
+	// A fresh Node install has no global node_modules yet: then this can't be a global install either.
 	const globalRoot = execFileSync("npm", ["root", "-g"], { encoding: "utf8" }).trim();
-	if (!fs.realpathSync(process.argv[1] ?? "").startsWith(fs.realpathSync(globalRoot))) {
+	const isGlobal = fs.existsSync(globalRoot) && fs.realpathSync(process.argv[1] ?? "").startsWith(fs.realpathSync(globalRoot));
+	if (!isGlobal) {
 		console.log(`Installing ${NAME}@${VERSION} globally…`);
-		execFileSync("npm", ["install", "-g", `${NAME}@${VERSION}`], { stdio: "inherit" });
+		try {
+			execFileSync("npm", ["install", "-g", `${NAME}@${VERSION}`], { stdio: "inherit" });
+		} catch {
+			console.error(`npm install -g ${NAME}@${VERSION} failed (output above); the status line was not set.`);
+			process.exitCode = 1;
+			return;
+		}
 	}
 	settings.statusLine = { type: "command", command: command(), refreshInterval: 1 };
 	writeClaudeSettings(settings);
