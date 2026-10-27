@@ -13,13 +13,13 @@
   ],
   "license": "MIT",
   "author": "Andrei Verdes (https://github.com/andreiverdes)",
-  "homepage": "https://github.com/andreiverdes/omp-cache-meter#readme",
+  "homepage": "https://github.com/andreiverdes/agent-cache-meter#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/andreiverdes/omp-cache-meter.git"
+    "url": "git+https://github.com/andreiverdes/agent-cache-meter.git"
   },
   "bugs": {
-    "url": "https://github.com/andreiverdes/omp-cache-meter/issues"
+    "url": "https://github.com/andreiverdes/agent-cache-meter/issues"
   },
   "type": "module",
   "files": [

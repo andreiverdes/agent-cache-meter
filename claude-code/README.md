@@ -3,11 +3,11 @@
 A prompt-cache meter for [Claude Code](https://code.claude.com)'s status line. It shows how many tokens the last request read from the cache, wrote to it and sent uncached, and counts down to the cache's expiry. When the cache goes cold it says what rebuilding it costs and what `/compact` costs instead; after `/compact` it shows what each later turn saves.
 
 <picture>
-  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/andreiverdes/omp-cache-meter/main/docs/screenshots/claude-statusline-light.png">
-  <img alt="Claude Code's status line under the prompt: 'cache' with a green 'warm', read 37.8k · write 0 · uncached 2, then at the right end 'hit rate', the split bar, 100.0% | 60:00" src="https://raw.githubusercontent.com/andreiverdes/omp-cache-meter/main/docs/screenshots/claude-statusline.png">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/andreiverdes/agent-cache-meter/main/docs/screenshots/claude-statusline-light.png">
+  <img alt="Claude Code's status line under the prompt: 'cache' with a green 'warm', read 37.8k · write 0 · uncached 2, then at the right end 'hit rate', the split bar, 100.0% | 60:00" src="https://raw.githubusercontent.com/andreiverdes/agent-cache-meter/main/docs/screenshots/claude-statusline.png">
 </picture>
 
-It is the [omp-cache-meter](https://github.com/andreiverdes/omp-cache-meter) meter, built from the same code, for Claude Code.
+It is the [agent-cache-meter](https://github.com/andreiverdes/agent-cache-meter) meter, the same code omp's `omp-cache-meter` extension runs, for Claude Code.
 
 ## Install
 
@@ -22,7 +22,7 @@ npx claude-cache-meter install
 Or as a Claude Code plugin, which runs the same command for you:
 
 ```text
-/plugin install cache-meter --marketplace andreiverdes/omp-cache-meter
+/plugin install cache-meter --marketplace andreiverdes/agent-cache-meter
 /cache-meter:setup
 ```
 
@@ -59,7 +59,7 @@ Run it in a project directory for that directory's newest session: session total
 |---|---|---|
 | `meter.show` | `always` | `near-expiry` shows the meter only when the cache is about to expire or has; `off` hides it |
 | `meter.warnLeadSeconds` | `60` | How long before expiry the meter turns amber |
-| `tern.publish` | `auto` | In a [Tern](https://github.com/andreiverdes/omp-cache-meter#the-tern-plugin) pane, write the state Tern's cache-meter plugin reads; `off` never writes it |
+| `tern.publish` | `auto` | In a [Tern](https://github.com/andreiverdes/agent-cache-meter#the-tern-plugin) pane, write the state Tern's cache-meter plugin reads; `off` never writes it |
 
 ## How it works
 
@@ -76,4 +76,4 @@ Run it in a project directory for that directory's newest session: session total
 
 ## License
 
-[MIT](https://github.com/andreiverdes/omp-cache-meter/blob/main/LICENSE)
+[MIT](https://github.com/andreiverdes/agent-cache-meter/blob/main/LICENSE)

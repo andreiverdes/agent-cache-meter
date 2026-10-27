@@ -1,5 +1,5 @@
 {
-  "name": "omp-cache-meter",
+  "name": "agent-cache-meter",
   "description": "Prompt-cache meter for Claude Code's status line",
   "owner": {
     "name": "Andrei Verdes",

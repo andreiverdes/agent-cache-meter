@@ -1,10 +1,10 @@
-# omp-cache-meter
+# agent-cache-meter
 
 A prompt-cache meter for [omp](https://github.com/can1357/oh-my-pi) and [Claude Code](https://code.claude.com). It shows how many tokens each request read from the cache, wrote to it and sent uncached, and counts down to the cache's expiry. When the cache goes cold it says what rebuilding it costs and whether `/compact` pays for itself. It also includes a plugin for Tern, Stencil's terminal, that shows every agent's cache in one place.
 
 <picture>
-  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/andreiverdes/omp-cache-meter/main/docs/screenshots/omp-meter-warm-light.png">
-  <img alt="The meter above omp's composer on one line: 'cache' with a green 'warm' badge, read 96.2k · write 380 · uncached 14, then at the right end 'hit rate', the split bar, 99.6% | 4:33" src="https://raw.githubusercontent.com/andreiverdes/omp-cache-meter/main/docs/screenshots/omp-meter-warm.png">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/andreiverdes/agent-cache-meter/main/docs/screenshots/omp-meter-warm-light.png">
+  <img alt="The meter above omp's composer on one line: 'cache' with a green 'warm' badge, read 96.2k · write 380 · uncached 14, then at the right end 'hit rate', the split bar, 99.6% | 4:33" src="https://raw.githubusercontent.com/andreiverdes/agent-cache-meter/main/docs/screenshots/omp-meter-warm.png">
 </picture>
 
 The repo has three parts:
@@ -29,14 +29,14 @@ omp install omp-cache-meter
 npx claude-cache-meter install
 
 # Tern (optional)
-tern plugin install github.com/andreiverdes/omp-cache-meter/tern-plugin
+tern plugin install github.com/andreiverdes/agent-cache-meter/tern-plugin
 ```
 
-omp sessions that are already running pick up the extension only after a restart. To update, run `omp plugin upgrade omp-cache-meter` and `tern plugin install github.com/andreiverdes/omp-cache-meter/tern-plugin --force`; to remove, `omp plugin uninstall omp-cache-meter` and `tern plugin remove cache-meter`.
+omp sessions that are already running pick up the extension only after a restart. To update, run `omp plugin upgrade omp-cache-meter` and `tern plugin install github.com/andreiverdes/agent-cache-meter/tern-plugin --force`; to remove, `omp plugin uninstall omp-cache-meter` and `tern plugin remove cache-meter`.
 
-`omp install github:andreiverdes/omp-cache-meter` installs the extension straight from this repository instead of npm.
+`omp install github:andreiverdes/agent-cache-meter` installs the extension straight from this repository instead of npm.
 
-In Claude Code you can install it as a plugin instead: `/plugin install cache-meter --marketplace andreiverdes/omp-cache-meter`, then `/cache-meter:setup`. [`claude-code/`](claude-code#readme) covers the status line's states, its `panel` command and its settings.
+In Claude Code you can install it as a plugin instead: `/plugin install cache-meter --marketplace andreiverdes/agent-cache-meter`, then `/cache-meter:setup`. [`claude-code/`](claude-code#readme) covers the status line's states, its `panel` command and its settings.
 
 ## The meter
 
@@ -52,18 +52,18 @@ The meter sits above the composer and redraws every second. It takes one line, t
 After `/compact` the meter keeps two amounts apart. **Per turn** is what every later request saves by reading the smaller prefix from the cache. **Now** is the compaction's one-off result, shown only when the cache had already expired: the rebuild it avoided, minus the summary request and the first write of the new prefix. When that is positive the meter says `paid for itself (~$0.74)`.
 
 <picture>
-  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/andreiverdes/omp-cache-meter/main/docs/screenshots/omp-meter-expiring-light.png">
-  <img alt="The meter on an expiring cache: an amber 'expires soon' badge, rebuild cost 96.6k ≈ $0.39 after, and hit rate, the split bar, 99.6% | 0:37 at the right end" src="https://raw.githubusercontent.com/andreiverdes/omp-cache-meter/main/docs/screenshots/omp-meter-expiring.png">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/andreiverdes/agent-cache-meter/main/docs/screenshots/omp-meter-expiring-light.png">
+  <img alt="The meter on an expiring cache: an amber 'expires soon' badge, rebuild cost 96.6k ≈ $0.39 after, and hit rate, the split bar, 99.6% | 0:37 at the right end" src="https://raw.githubusercontent.com/andreiverdes/agent-cache-meter/main/docs/screenshots/omp-meter-expiring.png">
 </picture>
 
 <picture>
-  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/andreiverdes/omp-cache-meter/main/docs/screenshots/omp-meter-cold-light.png">
-  <img alt="The meter on a cold cache, two lines: a red 'cold' badge with rebuild cost 96.6k ≈ $0.61 and '1h · expired | 4:00 ago' on the right; then '/compact recommended · ≈ $0.74 · +$0.12 now, pays back in ~7 turns' and '/cache for details' on the right" src="https://raw.githubusercontent.com/andreiverdes/omp-cache-meter/main/docs/screenshots/omp-meter-cold.png">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/andreiverdes/agent-cache-meter/main/docs/screenshots/omp-meter-cold-light.png">
+  <img alt="The meter on a cold cache, two lines: a red 'cold' badge with rebuild cost 96.6k ≈ $0.61 and '1h · expired | 4:00 ago' on the right; then '/compact recommended · ≈ $0.74 · +$0.12 now, pays back in ~7 turns' and '/cache for details' on the right" src="https://raw.githubusercontent.com/andreiverdes/agent-cache-meter/main/docs/screenshots/omp-meter-cold.png">
 </picture>
 
 <picture>
-  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/andreiverdes/omp-cache-meter/main/docs/screenshots/omp-meter-compacted-light.png">
-  <img alt="The meter after /compact: a 'reset by /compact' badge, ~$0.02 less per turn · +$0.12 now · next ≈ $0.25, and 96.6k → 60.0k on the right" src="https://raw.githubusercontent.com/andreiverdes/omp-cache-meter/main/docs/screenshots/omp-meter-compacted.png">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/andreiverdes/agent-cache-meter/main/docs/screenshots/omp-meter-compacted-light.png">
+  <img alt="The meter after /compact: a 'reset by /compact' badge, ~$0.02 less per turn · +$0.12 now · next ≈ $0.25, and 96.6k → 60.0k on the right" src="https://raw.githubusercontent.com/andreiverdes/agent-cache-meter/main/docs/screenshots/omp-meter-compacted.png">
 </picture>
 
 (The screenshots render the extension's own code in omp and Tern with a fixed Opus 4.5 session: a 96.6k-token prompt whose first 37k tokens, the tools and system prompt, stay cached.)
@@ -86,20 +86,20 @@ The meter recommends `/compact` when it pays back within 10 turns (`advice.payba
 `/cache` toggles a panel with session totals and the last eight requests, including warming refreshes and misses. Its title bar shows the next auto-refresh and its cost (`auto-refresh in 4:03 (~$0.05)`). While the cache is expiring or cold it starts with the details the meter leaves out: why omp didn't warm it, and on a cold cache what continue, `/compact` and `/new` each cost. After a compaction it starts with the breakdown behind the meter's two amounts.
 
 <picture>
-  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/andreiverdes/omp-cache-meter/main/docs/screenshots/omp-cache-panel-light.png">
-  <img alt="The /cache panel on a cold cache: a title bar with the model, tier and warming; why it went cold; continue ≈ $0.61 (rebuilds 96.6k, 37.0k of it still cached), /compact ≈ $0.74 (summary $0.49 + rewrite 60.0k $0.25, pays back in ~7 turns, then every later rebuild ~$0.37 cheaper) and /new; then session totals and the last requests with split bars" src="https://raw.githubusercontent.com/andreiverdes/omp-cache-meter/main/docs/screenshots/omp-cache-panel.png">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/andreiverdes/agent-cache-meter/main/docs/screenshots/omp-cache-panel-light.png">
+  <img alt="The /cache panel on a cold cache: a title bar with the model, tier and warming; why it went cold; continue ≈ $0.61 (rebuilds 96.6k, 37.0k of it still cached), /compact ≈ $0.74 (summary $0.49 + rewrite 60.0k $0.25, pays back in ~7 turns, then every later rebuild ~$0.37 cheaper) and /new; then session totals and the last requests with split bars" src="https://raw.githubusercontent.com/andreiverdes/agent-cache-meter/main/docs/screenshots/omp-cache-panel.png">
 </picture>
 
 <picture>
-  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/andreiverdes/omp-cache-meter/main/docs/screenshots/omp-cache-panel-compacted-light.png">
-  <img alt="The /cache panel after /compact on an expired cache: per turn ~$0.02 less (reads 60.0k instead of 96.6k); summary request $0.49; next request $0.25; rebuild avoided −$0.61; now +$0.12, more than continuing, which the cheaper turns repay" src="https://raw.githubusercontent.com/andreiverdes/omp-cache-meter/main/docs/screenshots/omp-cache-panel-compacted.png">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/andreiverdes/agent-cache-meter/main/docs/screenshots/omp-cache-panel-compacted-light.png">
+  <img alt="The /cache panel after /compact on an expired cache: per turn ~$0.02 less (reads 60.0k instead of 96.6k); summary request $0.49; next request $0.25; rebuild avoided −$0.61; now +$0.12, more than continuing, which the cheaper turns repay" src="https://raw.githubusercontent.com/andreiverdes/agent-cache-meter/main/docs/screenshots/omp-cache-panel-compacted.png">
 </picture>
 
 ### `/cache settings`
 
 `/cache settings` edits the extension's settings in place and shows the omp settings the meter follows, read-only.
 
-![The /cache settings list](https://raw.githubusercontent.com/andreiverdes/omp-cache-meter/main/docs/screenshots/omp-cache-settings.png)
+![The /cache settings list](https://raw.githubusercontent.com/andreiverdes/agent-cache-meter/main/docs/screenshots/omp-cache-settings.png)
 
 Settings live in `~/.omp/agent/cache-meter.json`. A missing or invalid field falls back to its default:
 
@@ -139,8 +139,8 @@ All colours come from the active omp or Tern theme, so light and dark themes bot
 ## Development
 
 ```sh
-git clone https://github.com/andreiverdes/omp-cache-meter.git
-cd omp-cache-meter
+git clone https://github.com/andreiverdes/agent-cache-meter.git
+cd agent-cache-meter
 bun install       # type definitions only; omp supplies its own API at runtime
 bun run check     # tsc --noEmit, both the extension and claude-code/
 
