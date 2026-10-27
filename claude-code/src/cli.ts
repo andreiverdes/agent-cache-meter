@@ -12,7 +12,7 @@ import { pricing } from "./prices";
 import { claudeHost } from "./profile";
 import { CLAUDE_DIR, dig, loadSession, modelFor, parseInput, type StatusInput } from "./session";
 
-const VERSION = "0.1.1";
+const VERSION = "0.1.2";
 const NAME = "claude-cache-meter";
 const SETTINGS_FILE = path.join(CLAUDE_DIR, "cache-meter.json");
 const CLAUDE_SETTINGS = path.join(CLAUDE_DIR, "settings.json");
@@ -101,17 +101,6 @@ function writeClaudeSettings(settings: Record<string, unknown>): void {
 	fs.renameSync(`${CLAUDE_SETTINGS}.tmp`, CLAUDE_SETTINGS);
 }
 
-/** The command Claude Code should run: the global install's name when the shell finds it, else this script's path. */
-function command(): string {
-	try {
-		const found = execFileSync("sh", ["-lc", `command -v ${NAME}`], { encoding: "utf8" }).trim();
-		if (found) return NAME;
-	} catch {
-		// not on PATH
-	}
-	return `node ${JSON.stringify(fs.realpathSync(process.argv[1] ?? ""))}`;
-}
-
 /** `install`: installs the package globally (unless this already is a global install) and sets the status line. */
 function install(): void {
 	const settings = readClaudeSettings();
@@ -134,7 +123,11 @@ function install(): void {
 			return;
 		}
 	}
-	settings.statusLine = { type: "command", command: command(), refreshInterval: 1 };
+	// npm's global root is a stable path; the shell Claude Code runs the status line in may lack npm's global bin on
+	// PATH, and npx puts its own temporary bin first, so a PATH lookup here would find the wrong copy. `node` stays a
+	// PATH lookup: Homebrew's own path to it changes with every Node upgrade.
+	const script = path.join(globalRoot, NAME, "dist", `${NAME}.js`);
+	settings.statusLine = { type: "command", command: `node ${JSON.stringify(script)}`, refreshInterval: 1 };
 	writeClaudeSettings(settings);
 	console.log(`Status line set in ${CLAUDE_SETTINGS} (previous file kept as settings.json.bak).`);
 	console.log(`Claude Code picks it up right away. Settings: ${SETTINGS_FILE}. Remove: ${NAME} uninstall.`);

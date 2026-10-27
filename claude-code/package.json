@@ -1,6 +1,6 @@
 {
   "name": "claude-cache-meter",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Prompt-cache meter as Claude Code's status line: read/write/uncached split, a countdown to expiry, and what /compact saves on a cold cache.",
   "keywords": [
     "claude-code",
