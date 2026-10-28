@@ -7,7 +7,7 @@ A prompt-cache meter for [Claude Code](https://code.claude.com)'s status line. I
   <img alt="Claude Code's status line under the prompt: 'cache' with a green 'warm', read 37.8k · write 0 · uncached 2, then at the right end 'hit rate', the split bar, 100.0% | 60:00" src="https://raw.githubusercontent.com/andreiverdes/agent-cache-meter/main/docs/screenshots/claude-statusline.png">
 </picture>
 
-It is the [agent-cache-meter](https://github.com/andreiverdes/agent-cache-meter) meter, the same code omp's `omp-cache-meter` extension runs, for Claude Code.
+It is the [agent-cache-meter](https://github.com/andreiverdes/agent-cache-meter) meter, the same code omp's `omp-cache-meter` extension runs, for Claude Code. [Why it matters](https://github.com/andreiverdes/agent-cache-meter#why-it-matters) shows in two charts what an expired cache and a large context cost.
 
 ## Install
 

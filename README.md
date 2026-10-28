@@ -7,6 +7,28 @@ A prompt-cache meter for [omp](https://github.com/can1357/oh-my-pi) and [Claude 
   <img alt="The meter above omp's composer on one line: 'cache' with a green 'warm' badge, read 96.2k · write 380 · uncached 14, then at the right end 'hit rate', the split bar, 99.6% | 4:33" src="https://raw.githubusercontent.com/andreiverdes/agent-cache-meter/main/docs/screenshots/omp-meter-warm.png">
 </picture>
 
+## Why it matters
+
+Every request sends the whole conversation again. The prompt cache makes that cheap: tokens read from it cost a tenth of normal input. But the cache lives only an hour after the last request (five minutes on an API key), and in a long conversation both of its limits get expensive.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/andreiverdes/agent-cache-meter/main/docs/figures/cache-timeline-dark.png">
+  <img alt="Bar chart of request costs in a 487k-token session: a row of small green bars at $0.12 each while working, a shaded hour where the cache stays warm, a dashed 'expired' line, and after 15 hours one tall red bar of $3.63 for the first request back, which rewrites 450k tokens, worth 30 warm requests" src="https://raw.githubusercontent.com/andreiverdes/agent-cache-meter/main/docs/figures/cache-timeline.png" width="900">
+</picture>
+
+**Coming back after the cache expired costs one rebuild.** The first request writes the whole conversation to the cache again, at the cache-write price. In this real 487k-token Opus 5.5 session that was $3.63, the price of 30 normal requests. The meter counts down to that moment, warns before it, and shows what the rebuild will cost.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/andreiverdes/agent-cache-meter/main/docs/figures/cache-cost-dark.png">
+  <img alt="Line chart of total spend over the 40 requests after coming back: continuing at 487k climbs from $3.63 to $8.55 at $0.12 a request; compacting first in omp starts at $3.72, crosses below after about two requests and ends at $5.31; compacting first in Claude Code starts at $2.16 and ends at $3.83, both at $0.04 a request" src="https://raw.githubusercontent.com/andreiverdes/agent-cache-meter/main/docs/figures/cache-cost.png" width="900">
+</picture>
+
+**A big context costs on every request, not just once.** Even with a warm cache, each request reads all 487k tokens, $0.12 apiece, and one message with tool calls is often 10–30 requests. After `/compact` the same requests cost $0.04. On a cold cache the meter compares both paths and recommends `/compact` when it pays: in Claude Code straight away, because its summary request is billed as plain input; in omp after about two requests, because omp writes the summarised history to the cache once more.
+
+The figures use list prices. On a subscription you don't pay them per token, but your usage limits fill in the same proportions. `bun docs/figures/build.ts` redraws them from the packages' own price tables.
+
+## What's in the repo
+
 The repo has three parts:
 
 | Part | Runs in | Does |
