@@ -26,6 +26,7 @@ local warned = {} -- agent pane id -> expiresAt already toasted
 local last_agent = nil -- agent pane focused most recently, for the history sparkline
 local main_canvas, settings_canvas = nil, nil
 local ticks = 0
+local revive -- (cx) -> (): restarts the tick chain when it has gone quiet; defined with the tick below
 
 -- Merges the stored settings over the defaults, keeping only values of the default's type and enum.
 local function load_settings()
@@ -309,6 +310,8 @@ local function is_open(cx, id)
 end
 
 local function open_main(cx)
+	load(cx)
+	revive(cx)
 	if is_open(cx, main_canvas) then
 		cx.canvas:set(main_canvas, { view = main_view(), dock = main_dock() })
 		cx.layout:focus(main_canvas)
@@ -387,9 +390,12 @@ tern.on("canvas_action", function(ev, cx)
 	return true
 end)
 
-tern.on("focus", function(ev, _cx)
+tern.on("focus", function(ev, cx)
 	if state[ev.pane] then last_agent = ev.pane end
+	revive(cx)
 end)
+tern.on("agent_state", function(_ev, cx) revive(cx) end)
+tern.on("window_start", function(cx) revive(cx) end)
 
 local function work(cx)
 	local ok, err = pcall(function()
@@ -422,37 +428,39 @@ local function work(cx)
 	if not ok then tern.log.warn("cache-meter:", err) end
 end
 
--- Tern stops a plugin's timers for good once one callback runs past its 50 ms budget, and pcall can't catch
--- that. Right after the machine wakes everything is slow, so the first ticks after a wall-clock jump only
--- re-arm. If a timer still trips, a slower watchdog on Tern's separate `await` budget takes the ticks over.
+-- One tick a second on a timer, whose callback gets the `cx` of the window that armed it, and nil once that window
+-- has closed. Such a chain ends there; the next event from a live window (focus, an agent's state change, a new
+-- window, opening the canvas) starts another. `chain` numbers them, so a superseded chain stops at its next tick.
+-- A tick past its budget only pauses the timer hook until its callbacks run again (Tern 0.9.13), so a paused chain
+-- is left alone. Right after the machine wakes everything is slow, so the first ticks after a wall-clock jump only
+-- re-arm.
 local SETTLE_MS = 3000
-local last_tick, last_wall, settle_until = tern.now(), os.time(), 0
+local chain, timer_paused = 0, false
+local last_tick, last_wall, settle_until = 0, os.time(), 0
 
-local function tick(cx, rearm)
-	rearm()
-	if not cx then return end
+local function tick(cx, gen)
+	if gen ~= chain then return end
+	if not cx then
+		tern.log.warn("cache-meter:", "tick chain lost its window; the next event restarts it")
+		return
+	end
+	tern.timer(1000, function(next_cx) tick(next_cx, gen) end)
 	local wall = os.time()
 	if wall - last_wall > 5 then settle_until = tern.now() + SETTLE_MS end
 	last_wall, last_tick = wall, tern.now()
 	if last_tick >= settle_until then work(cx) end
 end
 
-local function by_sleep(cx)
-	tick(cx, function()
-		tern.sleep(1000):next(function(_, _, next_cx) by_sleep(next_cx) end)
-	end)
+revive = function(cx)
+	if timer_paused or tern.now() - last_tick <= 3000 then return end
+	chain += 1
+	tick(cx, chain)
 end
 
-local function by_timer(cx)
-	tick(cx, function() tern.timer(1000, by_timer) end)
-end
-
-local function watchdog()
-	tern.sleep(5000):next(function(_, _, cx)
-		if tern.now() - last_tick > 5000 then by_sleep(cx) else watchdog() end
-	end)
-end
+tern.on("budget", function(ev, _cx)
+	if ev.hook == "timer" then timer_paused = ev.state == "paused" end
+end)
 
 load_settings()
-by_timer(nil)
-watchdog()
+local first = chain
+tern.timer(0, function(cx) tick(cx, first) end)

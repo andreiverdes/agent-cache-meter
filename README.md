@@ -41,7 +41,7 @@ The omp extension and the Claude Code status line each work on their own in any 
 
 ## Install
 
-Tested on omp 18.12.6, Claude Code 2.1.311 and Tern 0.8.2.
+Tested on omp 18.12.6, Claude Code 2.1.311 and Tern 0.9.13.
 
 ```sh
 # omp
